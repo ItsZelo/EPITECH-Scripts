@@ -1,0 +1,104 @@
+#!/bin/bash
+##
+## REPOSITORY script
+## Maxime BLANCHARD, 2018
+##
+
+EPITECH=${EPITECH:=""}
+THIS_SCRIPT="$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")"
+MESSAGE=""
+
+if [ -z ${EPITECH} ] ; then echo "You need to define an EPITECH environment variable :" ; echo "export EPITECH=firstname.name@epitech.eu" ; exit ; fi
+print_usage() {
+	echo "USAGE : ${THIS_SCRIPT} [option] [parameters]"
+	echo -e "Available options are:"
+	echo -e "\tlist"
+	echo -e "\tpush\t[commit_name]"
+	echo -e "\tclone\t[repository]"
+	echo -e "\tcreate\t[repository]"
+	echo -e "\tdelete\t[repository]"
+	echo -e "\tstatus\t[repository]"
+	echo -e "\tdeluser\t[repository] [user]"
+	echo -e "\tadduser\t[repository] [user] [permissions]"
+	exit 1
+}
+
+get_password() {
+	echo -n "Password: "
+	read -s PASSWORD
+}
+
+exec_command() {
+	MESSAGE=$(/usr/bin/expect -c "
+		log_user 0
+		spawn $1
+		expect \"Password:\"
+		send \"${PASSWORD}\r\"
+		expect eof
+		puts \$expect_out(buffer)")
+	if [[ "{${MESSAGE}[0]}" = *Error* ]] ; then printf '%s\n' "${MESSAGE}" ; exit 1 ; fi
+}
+
+repository_list() {
+	get_password
+	exec_command "blih -u ${EPITECH} repository list"
+	printf '%s\n' "${MESSAGE[@]}"
+}
+
+repository_push() {
+	git add --all
+        git commit -m "$1"
+        git push origin master
+}
+
+repository_clone() {
+	git clone git@git.epitech.eu:/${EPITECH}/$1
+}
+
+repository_create() {
+	get_password
+	exec_command "blih -u ${EPITECH} repository create $1"
+	printf '%s\n' "${MESSAGE}"
+	exec_command "blih -u ${EPITECH} repository setacl $1 ramassage-tek r"
+	printf '%s\n' "${MESSAGE}"
+}
+
+repository_delete() {
+	get_password
+	exec_command "blih -u ${EPITECH} repository delete $1"
+	printf '%s\n' "${MESSAGE}"
+}
+
+repository_status() {
+	get_password
+	exec_command "blih -u ${EPITECH} repository getacl $1"
+	printf '%s\n' "${MESSAGE}"
+}
+
+repository_deluser() {
+	get_password
+	exec_command "blih -u ${EPITECH} repository setacl $1 $2"
+	printf '%s\n' "${MESSAGE}"
+}
+
+repository_adduser() {
+	get_password
+	exec_command "blih -u ${EPITECH} repository setacl $1 $2 $3"
+	printf '%s\n' "${MESSAGE}"
+}
+
+if [ $# -eq 0 ] ; then print_usage ; fi
+
+case $1 in
+list) if [ $# -ne 1 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_list ;fi ;;
+push) if [ $# -ne 2 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_push $2 ;fi ;;
+clone) if [ $# -ne 2 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_clone $2 ;fi ;;
+create) if [ $# -ne 2 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_create $2 ;fi ;;
+delete) if [ $# -ne 2 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_delete $2 ;fi ;;
+status) if [ $# -ne 2 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_status $2 ;fi ;;
+deluser) if [ $# -ne 3 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_deluser $2 $3 ;fi ;;
+adduser) if [ $# -ne 4 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_adduser $2 $3 $4 ;fi ;;
+*) echo "$1 : Unknown parameter" ; print_usage ;;
+esac
+
+exit 0
