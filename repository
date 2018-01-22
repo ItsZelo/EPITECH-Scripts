@@ -51,7 +51,7 @@ repository_list() {
 repository_push() {
 	git add --all
         git commit -m "$1"
-        git push origin master
+        git push -f origin master
 }
 
 repository_clone() {
