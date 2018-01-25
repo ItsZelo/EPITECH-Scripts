@@ -76,7 +76,7 @@ repository_delete() {
 repository_status() {
 	get_password
 	exec_command "blih -u ${EPITECH} repository getacl $1"
-	echo ${MESSAGE[0]}
+	for ITEM in ${MESSAGE[@]} ; do echo ${ITEM} ; done
 }
 
 repository_deluser() {
