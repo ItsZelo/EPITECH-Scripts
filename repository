@@ -32,11 +32,13 @@ get_password() {
 }
 
 exec_command() {
+	NPASSWORD=$(perl -e 'print quotemeta shift(@ARGV)' "${PASSWORD}")
+
 	MESSAGE=$(/usr/bin/expect -c "
 		log_user 0
 		spawn $1
 		expect \"Password:\"
-		send \"${PASSWORD}\r\"
+		send \"${NPASSWORD}\r\"
 		expect eof
 		puts \$expect_out(buffer)")
 	if [[ "${MESSAGE[0]}" = *Error* ]] ; then printf '%s\n' "${MESSAGE}" ; exit 1 ; fi
@@ -50,8 +52,8 @@ repository_list() {
 
 repository_push() {
 	git add --all
-        git commit -m "$1"
-        git push -f origin master
+    git commit -m "$1"
+    git push origin master
 }
 
 repository_clone() {
@@ -95,13 +97,13 @@ if [ $# -eq 0 ] ; then print_usage ; fi
 
 case $1 in
 list) if [ $# -ne 1 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_list ;fi ;;
-push) if [ $# -ne 2 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_push $2 ;fi ;;
-clone) if [ $# -ne 2 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_clone $2 ;fi ;;
-create) if [ $# -ne 2 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_create $2 ;fi ;;
-delete) if [ $# -ne 2 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_delete $2 ;fi ;;
-status) if [ $# -ne 2 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_status $2 ;fi ;;
-deluser) if [ $# -ne 3 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_deluser $2 $3 ;fi ;;
-adduser) if [ $# -ne 4 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_adduser $2 $3 $4 ;fi ;;
+push) if [ $# -ne 2 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_push "$2" ;fi ;;
+clone) if [ $# -ne 2 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_clone "$2" ;fi ;;
+create) if [ $# -ne 2 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_create "$2" ;fi ;;
+delete) if [ $# -ne 2 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_delete "$2" ;fi ;;
+status) if [ $# -ne 2 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_status "$2" ;fi ;;
+deluser) if [ $# -ne 3 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_deluser "$2" "$3" ;fi ;;
+adduser) if [ $# -ne 4 ] ; then echo "Invalid number of arguments" ; print_usage ; else repository_adduser "$2" "$3" "$4" ;fi ;;
 *) echo "$1 : Unknown parameter" ; print_usage ;;
 esac
 
